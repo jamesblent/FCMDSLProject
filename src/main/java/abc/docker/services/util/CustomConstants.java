@@ -13,8 +13,8 @@ public class CustomConstants {
 
 
     //error message format is "errorcode||errormessage"
-    public static final String ERROR_CONSENT_NOT_SAVED="GENE-1000@Consent not saved.";
-    public static final String ERROR_CONSENT_NOT_FOUND="Resource.NotFound@Consent with the specified id does not exist";
+    public static final String ERROR_CUSTOMER_NOT_SAVED="GENE-1000@Customer not saved.";
+    public static final String ERROR_CUSTOMER_NOT_FOUND="Resource.NotFound@Customer with the specified id does not exist";
     public static final String ERROR_CONSENT_INVALID_CONSENT_STATUS="Resource.InvalidConsentStatus@Consent with the specified id is invalid";
     public static final String ERROR_CONSENT_ACCOUNTS_NOT_FOUND="Resource.NotFound@Accounts do not exist";
     public static final String ERROR_CONSENT_ACCOUNT_NOT_VALIDATED="Resource.NotFound@Account with the specified id does not exist";

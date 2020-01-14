@@ -15,6 +15,7 @@ public class DatabaseHelper {
     };
 
     private Dao<Consent, Integer> consentDao = null;
+    private Dao<Customer, Integer> customerDao = null;
     private Dao<UserAccount, Integer> userAccountsDao = null;
 
     public  DatabaseHelper() throws SQLException{
@@ -51,11 +52,11 @@ public class DatabaseHelper {
 
 
 
-     public Dao<Consent, Integer> getConsentDao() throws SQLException {
-        if (consentDao == null) {
-            consentDao = DaoManager.createDao(connectionSource,Consent.class);
+     public Dao<Customer, Integer> getCustomerDao() throws SQLException {
+        if (customerDao == null) {
+            customerDao = DaoManager.createDao(connectionSource,Customer.class);
         }
-        return consentDao;
+        return customerDao;
     }
 
 

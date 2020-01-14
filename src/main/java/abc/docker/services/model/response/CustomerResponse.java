@@ -1,47 +1,26 @@
-package abc.docker.services.model;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
+package abc.docker.services.model.response;
+
 import com.j256.ormlite.field.DatabaseField;
-import com.j256.ormlite.table.DatabaseTable;
 
-import java.util.ArrayList;
-
-@DatabaseTable(tableName = "CUSTOMER")
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class Customer {
-    public Customer() {
-    }
-
-    @DatabaseField(columnName="CUSTOMER_ID" ,id = true,generatedId = true)
+public class CustomerResponse {
+    private String creationDateTime;
     private String customerId;
-
-    @DatabaseField(columnName = "FirstName", canBeNull = false)
     private String firstName;
-
-    @DatabaseField( columnName = "LastName", canBeNull = false)
     private String lastName;
-
-    @DatabaseField(columnName = "DOB")
     private String dob;
-
-    @DatabaseField(columnName = "Email")
     private String email;
-
-    @DatabaseField(columnName = "Phone")
     private String phone;
-
-    @DatabaseField( columnName = "City")
     private String city;
-
-    @DatabaseField( columnName = "REGISTRATION_ID")
     private String registrationId;
-
-    @DatabaseField( columnName = "is_active")
     private String isActive;
 
-    @DatabaseField( columnName = "date_creation")
-    private String creationDateTime;
+    public String getCreationDateTime() {
+        return creationDateTime;
+    }
 
+    public void setCreationDateTime(String creationDateTime) {
+        this.creationDateTime = creationDateTime;
+    }
 
     public String getCustomerId() {
         return customerId;
@@ -113,13 +92,5 @@ public class Customer {
 
     public void setIsActive(String isActive) {
         this.isActive = isActive;
-    }
-
-    public String getCreationDateTime() {
-        return creationDateTime;
-    }
-
-    public void setCreationDateTime(String creationDateTime) {
-        this.creationDateTime = creationDateTime;
     }
 }

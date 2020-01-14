@@ -7,7 +7,6 @@ import abc.docker.services.exception.BadRequestException;
 import abc.docker.services.exception.ForbiddenRequestException;
 import abc.docker.services.model.*;
 import abc.docker.services.exception.InternalServerException;
-import abc.docker.services.model.response.PostConsentResponse;
 import abc.docker.services.model.response.ResponseMeta;
 import abc.docker.services.model.response.SuccessResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,7 +20,6 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 public class ConsentUtil {
 
@@ -84,63 +82,23 @@ public class ConsentUtil {
         else return null;
     }
 
-    public static Consent validateAndConvertUpdateConsentBean(Consent inputConsent) throws SQLException, IOException, ParseException {
-        //conversion
-        Consent foundConsent = ConsentUtil.getConsentFromStore(inputConsent.getConsentId());
-        ConsentUtil.updateConsentStatusIfExpired(foundConsent);
 
-        if (inputConsent.getStatus() != null && !inputConsent.getStatus().isEmpty()) {
-            foundConsent.setStatus(inputConsent.getStatus());
-            foundConsent.setStatusUpdateDateTime(ConsentUtil.getISO8601StringForDate(new Date()));
-        }
-
-        if (inputConsent.getTppState() != null && !inputConsent.getTppState().isEmpty())
-            foundConsent.setTppState(inputConsent.getTppState());
-
-        if (inputConsent.getTppRedirectURI() != null && !inputConsent.getTppRedirectURI().isEmpty())
-            foundConsent.setTppRedirectURI(inputConsent.getTppRedirectURI());
-
-        if (inputConsent.getTppKey() != null && !inputConsent.getTppKey().isEmpty())
-            foundConsent.setTppKey(inputConsent.getTppKey());
-
-        if (inputConsent.getUserId() != null && !inputConsent.getUserId().isEmpty())
-            foundConsent.setUserId(inputConsent.getUserId());
-
-
-        return foundConsent;
+    public static Customer getCustomerbyId(String customerId) throws SQLException {
+        Customer foundCustomer = DatabaseManager.getInstance().getCustomerbyId(customerId);
+        if (foundCustomer == null)
+            throw new BadRequestException(CustomConstants.ERROR_CUSTOMER_NOT_FOUND);
+        return foundCustomer;
     }
 
-    public static Consent getConsentFromStore(String consentId) throws SQLException {
-        Consent foundConsent = DatabaseManager.getInstance().getConsent(consentId);
-        if (foundConsent == null)
-            throw new BadRequestException(CustomConstants.ERROR_CONSENT_NOT_FOUND);
-        return foundConsent;
+    public static Customer getCustomerbyEmail(String customerEmail) throws SQLException {
+        Customer foundCustomer = DatabaseManager.getInstance().getCustomerbyId(customerEmail);
+        if (foundCustomer == null)
+            throw new BadRequestException(CustomConstants.ERROR_CUSTOMER_NOT_FOUND);
+        return foundCustomer;
     }
 
 
 
-    public static void validateConsentForAccount(String consentId, String accountId) throws SQLException {
-        Consent foundConsent = DatabaseManager.getInstance().getConsent(consentId);
-        if (foundConsent == null)
-            throw new BadRequestException(CustomConstants.ERROR_CONSENT_NOT_FOUND);
-        UserAccount userAccount = DatabaseManager.getInstance().getConsentForAccount(foundConsent, accountId);
-        if (userAccount == null)
-            throw new BadRequestException(CustomConstants.ERROR_CONSENT_ACCOUNT_NOT_VALIDATED );
-
-    }
-
-    public static UserAccount getAccountFromConsent(String consentId) throws SQLException, IOException, ParseException {
-        Consent foundConsent = DatabaseManager.getInstance().getConsent(consentId);
-        if (foundConsent == null)
-            throw new BadRequestException(CustomConstants.ERROR_CONSENT_NOT_FOUND);
-        updateConsentStatusIfExpired(foundConsent);
-        UserAccount userAccount = DatabaseManager.getInstance().getConsentAccount(foundConsent);
-        if (userAccount == null)
-            throw new BadRequestException(CustomConstants.ERROR_CONSENT_ACCOUNT_NOT_VALIDATED );
-
-        return userAccount;
-
-    }
 
     public static void validateConsentForPermission(Consent foundConsent, String permissionType) throws  InternalServerException {
         String dbPermissions=foundConsent.getPersistedPermission();
@@ -483,59 +441,15 @@ public class ConsentUtil {
 
 
 
-    public static Consent getAndConvertResponseConsentBean(String consentId) throws SQLException, IOException, ParseException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        Gson gson = new GsonBuilder().create();
-        Consent responseConsent = ConsentUtil.getConsentFromStore(consentId);
-        if(responseConsent.getStatus().equalsIgnoreCase(CustomConstants.STATUS_REVOKED))
-            throw new BadRequestException(CustomConstants.ERROR_CONSENT_NOT_FOUND);
-        ConsentUtil.updateConsentStatusIfExpired(responseConsent);
 
-        switch (responseConsent.getConsentType()) {
-            case CustomConstants.CONSENT_TYPE_PISP:
-                responseConsent.setInitiation(gson.fromJson(responseConsent.getPersistedInitiation(), Initiation.class));
-                if(responseConsent.getPersistedSCASupportData()!=null
-                        && !responseConsent.getPersistedSCASupportData().isEmpty()){
-                    responseConsent.setScaSupportData(gson.fromJson(responseConsent.getPersistedSCASupportData(), SCASupportData.class));
-                }
-                if(responseConsent.getPersistedAuthorisation()!=null &&
-                        !responseConsent.getPersistedAuthorisation().isEmpty()){
-                    responseConsent.setAuthorisation(gson.fromJson(responseConsent.getPersistedAuthorisation(), Authorisation.class));
-                }
-                break;
-            case CustomConstants.CONSENT_TYPE_AISP:
-                responseConsent.setPermissions(getPermissionsArrayFromString(responseConsent.getPersistedPermission()));
-                break;
-        }
-
-        if (responseConsent.getPersistedLinks() != null && !responseConsent.getPersistedLinks().isEmpty())
-            responseConsent.setLinks(objectMapper.readValue(responseConsent.getPersistedLinks(), Object.class));
-
-        if (responseConsent.getPersistedMeta() != null && !responseConsent.getPersistedMeta().isEmpty())
-            responseConsent.setMeta(objectMapper.readValue(responseConsent.getPersistedMeta(), Object.class));
-
-        if (responseConsent.getPersistedRisk() != null && !responseConsent.getPersistedRisk().isEmpty())
-            responseConsent.setRisk(gson.fromJson(responseConsent.getPersistedRisk(),Risk.class));
-
-        return responseConsent;
-    }
-
-    public static SuccessResponse createSuccessResponse(Object responseDataObj) {
+    public static SuccessResponse createSuccessResponse(Object data) {
         SuccessResponse successResponse = new SuccessResponse();
-        String successCode="";
-        String successMessage="";
-
-        if (responseDataObj instanceof PostConsentResponse) {
-            //create consent
-            successCode=CustomConstants.SUCCESS_CONSENT_SAVED.split(":")[0];
-            successMessage=CustomConstants.SUCCESS_CONSENT_SAVED.split(":")[1];
-        }else if (responseDataObj instanceof Consent) {
-            //get consent
-            successCode=CustomConstants.SUCCESS_CONSENT_RETREIVED.split(":")[0];
-            successMessage=CustomConstants.SUCCESS_CONSENT_RETREIVED.split(":")[1];
-        }
-        successResponse.setData( responseDataObj);
-
+        ResponseMeta responseMeta=new ResponseMeta();
+        responseMeta.setCode("000000");
+        responseMeta.setMessage("success");
+        successResponse.setMeta(responseMeta);
+        if(data!=null)
+        successResponse.setData(data);
 
         return successResponse;
     }

@@ -1,6 +1,7 @@
 package abc.docker.services.database;
 
 import abc.docker.services.model.Consent;
+import abc.docker.services.model.Customer;
 import abc.docker.services.model.UserAccount;
 import abc.docker.services.util.CustomConstants;
 import com.j256.ormlite.dao.Dao;
@@ -25,9 +26,9 @@ public class DatabaseManager {
     }
 
 
-    public boolean saveConsent(Consent consent,String action) throws SQLException, IOException {
-        Dao<Consent, Integer> consentDao = dbOpenHelper.getConsentDao();
-        Dao.CreateOrUpdateStatus i=consentDao.createOrUpdate(consent);
+    public boolean saveCustomer(Customer consent, String action) throws SQLException, IOException {
+        Dao<Customer, Integer> customerDao = dbOpenHelper.getCustomerDao();
+        Dao.CreateOrUpdateStatus i=customerDao.createOrUpdate(consent);
         dbOpenHelper.connectionSource.close();
         if(action.equalsIgnoreCase(CustomConstants.CONSENT_ACTION_UPDATE))
             return i.isUpdated();
@@ -41,13 +42,6 @@ public class DatabaseManager {
         return i.isCreated();
     }
 
-    public Consent getConsent(String  consentId) throws SQLException {
-        List<Consent> consent = null;
-        consent = dbOpenHelper.getConsentDao().queryForEq("CONSENT_ID",consentId);
-        if(consent!=null&&consent.size()>0)
-            return consent.get(0);
-        return null;
-    }
 
     public UserAccount getConsentForAccount(Consent  foundConsent, String accountId) throws SQLException {
         List<UserAccount> userAccounts = null;
@@ -62,11 +56,20 @@ public class DatabaseManager {
         return null;
     }
 
-    public UserAccount getConsentAccount(Consent  foundConsent) throws SQLException {
-        List<UserAccount> userAccounts = null;
-        userAccounts = dbOpenHelper.getUserAccountsDao().queryForEq("CONSENT_ID",foundConsent);
-        if(userAccounts!=null&&userAccounts.size()>0) {
-            return userAccounts.get(0);
+    public Customer getCustomerbyId(String customerId) throws SQLException {
+        List<Customer> customers = null;
+        customers = dbOpenHelper.getCustomerDao().queryForEq("CUSTOMER_ID",customerId);
+        if(customers!=null&&customers.size()>0) {
+            return customers.get(0);
+        }
+        return null;
+    }
+
+    public List<Customer> getCustomerbyEmail(String customerId) throws SQLException {
+        List<Customer> customers = null;
+        customers = dbOpenHelper.getCustomerDao().queryForEq("Email",customerId);
+        if(customers!=null&&customers.size()>0) {
+            return customers;
         }
         return null;
     }
